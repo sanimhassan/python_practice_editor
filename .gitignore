@@ -7,14 +7,7 @@ php_errors.log
 /vendor/
 /node_modules/
 .DS_Store
-php/db_config.php
-php/login.php
-php/register.php
-php/db_test.php
-php/get_codes.php
-php/save_progress.php
-php/test.php
-php/php_errors.log
+
 .env.save
 python-pwa-practice-zip-EXTRACTED-ARCHIVE/
 schema-sql-EXTRACTED-ARCHIVE/
