@@ -1,663 +1,354 @@
 <!DOCTYPE html>
+<!-- Version 1.0.2 - Added manual update feature (June 2, 2025) -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Python Practice - Learn Python Programming</title>
     <meta name="description" content="Practice Python programming with interactive exercises for beginners and advanced learners">
-    <link rel="stylesheet" href="css/enhanced-styles.css?v=1.2">
+    <!--<link rel="stylesheet" href="css/enhanced-styles.css?v=1"> Updated to force cache refresh -->
+    <link rel="stylesheet" href="css/style.css">
     <link rel="manifest" href="manifest.json">
-    
+    <!-- Added auto-update notification system -->
     <!-- Updated icon references to use local files instead of CDN -->
     <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/apple-touch-icon-152x152.png">
     <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon-180x180.png">
-    
+
     <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/icon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/icon-16x16.png">
     <link rel="shortcut icon" href="assets/icons/favicon.ico">
-    
+
     <!-- Fixed Google Fonts links with properly encoded ampersands -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&amp;display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- CodeMirror 5 CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.css">
-    
-    <!-- Preload Pyodide for faster loading -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/pyodide/v0.22.0/full/pyodide.js" as="script" crossorigin="anonymous">
 
+   
 </head>
 <body>
     <header>
         <h1><i class="fab fa-python"></i> Python Practice</h1>
         <div class="auth-buttons">
-            <button id="login-btn"><i class="fas fa-sign-in-alt"></i> Login</button>
-            <button id="register-btn"><i class="fas fa-user-plus"></i> Register</button>
+            <button id="login-btn" class="btn-auth" type="button"><i class="fas fa-sign-in-alt"></i> Login</button>
+            <button id="register-btn" class="btn-auth" type="button"><i class="fas fa-user-plus"></i> Register</button>
+            <button id="theme-toggle-btn" class="theme-btn" type="button" aria-label="Toggle dark/light mode"><i class="fas fa-moon"></i></button>
         </div>
     </header>
 
     <div class="tabs">
-        <div class="tab active" data-tab="basic"><i class="fas fa-code"></i> Basic Editor</div>
-        <div class="tab" data-tab="advanced"><i class="fas fa-laptop-code"></i> Advanced Editor</div>
+        <div class="tab active" data-tab="classic-editor">
+            <i class="fas fa-code"></i> Classic Editor
+        </div>
+        <div class="tab" data-tab="readme">
+            <i class="fas fa-book"></i> README
+        </div>
+        <div class="tab" data-tab="guide">
+            <i class="fas fa-map-signs"></i> Guide
+        </div>
     </div>
 
-    <div class="content">
-        <div class="main full-width">
+    <!-- Python Engine Status Indicator (hidden from users) -->
+    <div id="python-engine-status" class="python-engine-status loading" style="display: none;">
+        <i class="fas fa-spinner fa-spin"></i> <span id="engine-status-text">Initializing Python engine...</span>
+        <div style="font-size: 0.8em; margin-top: 5px;">
+           
+            <span id="pyodide-status">Pyodide: On-demand</span>
+        </div>
+    </div>
+
+    <div class="tab-content active" data-tab-content="classic-editor">
+        <div class="main-content">
             <div class="editor-container">
-                <div class="toolbar">
-                    <div class="toolbar-left">
-                        <select id="example-select" title="Code examples" aria-label="Select a code example">
-                            <option value="">Select an example</option>
-                        </select>
-                        <select id="advanced-example-select" title="Advanced examples" aria-label="Select an advanced code example" style="display: none;">
-                            <option value="">Select an advanced example</option>
-                        </select>
-                    </div>
-                    <div class="toolbar-right">
-                        <div class="tooltip">
-                            <button id="reset-btn"><i class="fas fa-undo"></i> Reset</button>
-                            <span class="tooltiptext">Reset code</span>
-                        </div>
-                        <div class="tooltip">
-                            <button id="run-btn"><i class="fas fa-play"></i> Run Code</button>
-                            <span class="tooltiptext">Run your code</span>
-                        </div>
-                    </div>
+                <div class="editor-toolbar">
+                    <button id="run-btn" class="btn-run" type="button" disabled><i class="fas fa-play"></i> Run Code</button>
+                    <button id="reset-btn" class="btn-reset" type="button"><i class="fas fa-undo"></i> Reset</button>
+                    <button id="clear-output-btn" class="btn-clear" type="button"><i class="fas fa-trash-alt"></i> Clear Output</button>
+                    <button id="editor-theme-toggle-btn" class="btn-theme" type="button"><i class="fas fa-adjust"></i> Toggle Theme</button>
+                    <div id="execution-count" style="display: none; margin-left: 15px; align-self: center;"></div>
                 </div>
-
-                <!-- Editor div for CodeMirror -->
-                <div id="editor"></div>
+                <div class="editor-section">
+                    <div id="editor"></div>
+                </div>
             </div>
-
             <div class="output-container">
                 <div class="output-header">
-                    <h3><i class="fas fa-terminal"></i> Output</h3>
-                    <button id="clear-output"><i class="fas fa-trash-alt"></i> Clear</button>
+                    <span><i class="fas fa-terminal"></i> Output</span>
+                    <button id="clear-output" class="btn-clear" type="button" aria-label="Clear output"><i class="fas fa-trash-alt"></i></button>
                 </div>
-                <div class="output" id="output">
-                    Run your Python code to see output here
-                </div>
+                <div id="output" class="output">🐍 Python engine ready. Libraries like numpy and pandas are available.</div>
             </div>
         </div>
     </div>
+    <div class="tab-content" data-tab-content="readme">
+        <div class="readme-content">
+            <!-- README content will be loaded dynamically -->
+            <div id="example-buttons"></div>
+            <pre id="example-code-display"></pre>
+        </div>
+    </div>
+    <div class="tab-content" data-tab-content="guide">
+        <div class="guide-content" style="padding: 20px;">
+            <h2>How to Use Python Practice</h2>
+            <p>Welcome to Python Practice! Here’s a quick guide to get you started:</p>
+            <ul>
+                <li><strong>Classic Editor:</strong> Write and run your Python code here. The editor supports syntax highlighting and autocompletion. Please note that it would only work in desktop version due to some limitations.</li>
+                <li><strong>Run Code:</strong> Click the "Run Code" button to execute your code. The output will appear in the output panel.</li>
+                <li><strong>README:</strong> This tab contains example code snippets that you can load into the editor by just visiting any tab under README.</li>
+                <li><strong>Guide:</strong> You're here! This tab provides instructions on how to use the application.</li>
+                <li><strong>Login/Register:</strong> Create an account to save your code and track your progress.</li>
+            </ul>
+        </div>
+    </div>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
+<!-- Login Modal -->
+<div id="login-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
             <h2>Login</h2>
+            <button type="button" class="close" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
             <form id="login-form">
-                <div class="form-group">
-                    <label for="login-username">Username or Email</label>
-                    <input type="text" id="login-username" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" name="password" required>
-                </div>
-                <div class="form-actions">
-                    <button type="submit">Login</button>
-                    <p>No account? <a href="#" id="show-register">Register here</a></p>
-                </div>
-                <div id="login-message" class="form-message"></div>
+            <div class="form-group">
+                <label for="login-username">Username or Email</label>
+                <input type="text" id="login-username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" name="password" required>
+            </div>
+            <div class="form-actions">
+                <button type="submit">Login</button>
+                <p>No account? <a href="#" id="show-register">Register here</a></p>
+            </div>
+            <div id="login-message" class="form-message"></div>
             </form>
         </div>
     </div>
+</div>
 
-    <!-- Register Modal -->
-    <div id="register-modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
+<!-- Register Modal -->
+<div id="register-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
             <h2>Register</h2>
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="register-username">Username</label>
-                    <input type="text" id="register-username" name="username" required minlength="3" maxlength="50">
-                </div>
-                <div class="form-group">
-                    <label for="register-email">Email</label>
-                    <input type="email" id="register-email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="register-password">Password</label>
-                    <input type="password" id="register-password" name="password" required minlength="6">
-                </div>
-                <div class="form-group">
-                    <label for="register-confirm-password">Confirm Password</label>
-                    <input type="password" id="register-confirm-password" name="confirm_password" required minlength="6">
-                </div>
-                <div class="form-actions">
-                    <button type="submit">Register</button>
-                    <p>Already have an account? <a href="#" id="show-login">Login here</a></p>
-                </div>
-                <div id="register-message" class="form-message"></div>
+            <button type="button" class="close" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="register-form" action="php/register.php" method="POST" onsubmit="return handleRegister(event)">
+            <div class="form-group">
+                <label for="register-username">Username</label>
+                <input type="text" id="register-username" name="username" required minlength="3" maxlength="50">
+            </div>
+            <div class="form-group">
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" id="register-password" name="password" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="register-confirm-password">Confirm Password</label>
+                <input type="password" id="register-confirm-password" name="confirm_password" required minlength="6">
+            </div>
+            <div class="form-actions">
+                <button type="submit">Register</button>
+                <p>Already have an account? <a href="#" id="show-login">Login here</a></p>
+            </div>
+            <div id="register-message" class="form-message"></div>
             </form>
         </div>
     </div>
+</div>
 
-    <div id="toast" class="toast">Notification message</div>
+<!-- My Codes Modal -->
+<div id="my-codes-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>My Saved Codes</h2>
+            <button type="button" class="close" aria-label="Close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="saved-codes-list" class="saved-codes-list">
+                <!-- Saved codes will be displayed here -->
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- CodeMirror and JS files with correct paths -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://skulpt.org/js/skulpt.min.js"></script>
-    <script src="https://skulpt.org/js/skulpt-stdlib.js"></script>
+<div id="toast" class="toast">Notification message</div>
 
-    <!-- CodeMirror 5 JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/python-hint.js"></script> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/python-lint.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
+<!-- CodeMirror and JS files with correct paths -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 
-    <!-- Removed direct Pyodide loading - now using resilient loading system in pyodide-setup.js -->
-    <!-- <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script> -->
+<!-- CodeMirror 5 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/anyword-hint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/comment/comment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/lint/lint.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/fold/indent-fold.min.js"></script>
 
-    <!-- Python examples and advanced features with proper loading order -->
-    <script src="js/python-examples.js"></script>
-    <script>
-        // Quick check to verify Python examples are available
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log("DOM loaded, checking Python examples...");
-            if (!window.basicPythonExamples || !window.advancedPythonExamples) {
-                console.warn("Python examples not available on page load. Creating fallbacks...");
-                // Create fallbacks immediately if missing
-                if (!window.basicPythonExamples) {
-                    window.basicPythonExamples = [
-                        {
-                            id: "hello",
-                            title: "Hello World",
-                            code: '# Simple Hello World example\nprint("Hello, World!")'
-                        },
-                        {
-                            id: "variables",
-                            title: "Variables & Data Types",
-                            code: '# Variables example\nname = "Python Learner"\nage = 25\nprint("Name:", name)\nprint("Age:", age)'
-                        }
-                    ];
-                    console.log("Created fallback basic examples");
-                }
-                
-                if (!window.advancedPythonExamples) {
-                    window.advancedPythonExamples = [
-                        {
-                            id: "fstrings",
-                            title: "F-strings (Python 3.6+)",
-                            code: '# F-strings example\nname = "Alice"\nage = 30\nprint(f"My name is {name} and I am {age} years old.")'
-                        },
-                        {
-                            id: "list_comp",
-                            title: "List Comprehensions",
-                            code: '# List comprehension\nnumbers = [1, 2, 3, 4, 5]\nsquares = [x**2 for x in numbers]\nprint(f"Squares: {squares}")'
-                        }
-                    ];
-                    console.log("Created fallback advanced examples");
-                }
-            }
-        });
-    </script>
-    <!-- Using the optimized Pyodide setup that works correctly -->
-    <script src="js/pyodide-setup.js?v=1.0.2"></script>
-    <script src="js/enhanced-ui.js"></script>
-    <script src="js/hostinger-ui.js"></script>
-    <script src="js/skulpt-setup.js"></script>
+<!-- New Modular JS Files -->
+<script src="js/ui-helpers.js"></script>
+<script src="js/theme.js?v=3"></script>
+<script src="js/auth.js"></script>
+<script src="js/editor.js"></script>
+<script src="js/readme.js"></script>
+<script src="js/hybrid-python-engine.js"></script>
+<script src="js/app-controller.js"></script>
 
-    <script>
-        let editor; // Make editor globally accessible within this script block
-        let currentMode = "basic"; // Track current editor mode: "basic" or "advanced"
+<script>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Debug the examples availability
-            console.log("Basic examples available:", typeof window.basicPythonExamples !== 'undefined', 
-                        window.basicPythonExamples ? window.basicPythonExamples.length : 0);
-            console.log("Advanced examples available:", typeof window.advancedPythonExamples !== 'undefined',
-                        window.advancedPythonExamples ? window.advancedPythonExamples.length : 0);
-            
-            // Ensure the examples are included in the window scope
-            if (!window.basicPythonExamples || !window.advancedPythonExamples) {
-                console.error("Python examples not found in global scope!");
-            }
-            
-            // Initialize CodeMirror
-            editor = CodeMirror(document.getElementById('editor'), {
-                mode: 'python',
-                lineNumbers: true,
-                indentUnit: 4,
-                tabSize: 4,
-                theme: 'material-darker',
-                lineWrapping: true,
-                autoCloseBrackets: true,
-                matchBrackets: true,
-                gutters: ["CodeMirror-linenumbers", "CodeMirror-lint-markers", "CodeMirror-foldgutter"],
-                lint: true,
-                foldGutter: true,
-                extraKeys: {
-                    "Ctrl-Space": "autocomplete",
-                    "Cmd-Space": "autocomplete",
-                    "Tab": function(cm) {
-                        if (cm.somethingSelected()) {
-                            cm.indentSelection("add");
-                        } else {
-                            cm.replaceSelection(cm.getOption("indentWithTabs")? "\t":
-                                Array(cm.getOption("indentUnit") + 1).join(" "), "end", "+input");
-                        }
-                    },
-                    "Shift-Tab": function(cm) {
-                        cm.indentSelection("subtract");
-                    },
-                    "Cmd-/": "toggleComment",
-                    "Ctrl-/": "toggleComment"
-                },
-                value: `# Welcome to Python Practice!
-# Start coding here - You may remove the following examples and start coding on your own
 
-print("Hello World")
-
-# Since Basic editor doesn't support f-strings, you can use string formatting.
-# For advanced features, use Advanced editor.
-name = "Python Coder"
-print("Welcome, {}!".format(name))
-
-# Variables and operations
-x = 10
-y = 20
-print("Sum:", x + y)
-
-# You can try conditionals
-if x < y:
-    print("y is greater than x")
-else:
-    print("x is greater than or equal to y")
-
-# Try loops
-for i in range(5):
-    print("Count:", i)
-`
-            });
-
-            // Populate example dropdowns
-            populateExampleDropdowns();
-
-            // Set up tab switching
-            setupTabs();
-
-            // Run button functionality
-            const runBtn = document.getElementById('run-btn');
-            if (runBtn) {
-                runBtn.addEventListener('click', function() {
-                    if (!editor) {
-                        console.error("Editor not initialized");
-                        if(typeof showToast === 'function') showToast('Editor not ready.', 'error');
-                        return;
-                    }
-                    
-                    const code = editor.getValue();
-                    
-                    if (currentMode === "basic") {
-                        // Use Skulpt for basic editor
-                        runPythonWithSkulpt(code, {
-                            __future__: {
-                                print_function: true,
-                                division: true,
-                                dunder_round: true,
-                                unicode_literals: true,
-                                annotations: true,
-                                generators: true,
-                                bankers_rounding: true,
-                                class_repr: true,
-                                inherit_from_object: true,
-                                super_args: true,
-                                octal_number_literal: true,
-                                python_version: true,
-                                exceptions: true,
-                                no_long_type: true,
-                                ceil_floor_int: true
-                            }
-                        });
-                    } else {
-                        // Use advanced Python engine 
-                        runPythonWithPyodide(code);
-                    }
-                });
-            } else {
-                 console.error("Run button not found!");
-            }
-
-            // Add clear button functionality
-            const clearBtn = document.getElementById('clear-output');
-            if (clearBtn) {
-                clearBtn.addEventListener('click', function() {
-                    document.getElementById('output').textContent = 'Output cleared';
-                });
-            }
-
-            // Reset button functionality
-            const resetBtn = document.getElementById('reset-btn');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    if (editor) {
-                        if (currentMode === "basic") {
-                            editor.setValue(`# Welcome to Python Practice!
-# Start coding here - You may remove the following examples and start coding on your own
-
-print("Hello World")
-
-# Since Basic editor doesn't support f-strings, you can use string formatting.
-# For advanced features, use Advanced editor.
-name = "Python Coder"
-print("Welcome, {}!".format(name))
-
-# Variables and operations
-x = 10
-y = 20
-print("Sum:", x + y)
-
-# You can try conditionals
-if x < y:
-    print("y is greater than x")
-else:
-    print("x is greater than or equal to y")
-
-# Try loops
-for i in range(5):
-    print("Count:", i)
-`);
-                        } else {
-                            editor.setValue(`# Welcome to the Advanced Python Editor!
-# Here you can use modern Python 3 features like f-strings
-
-name = "Python Coder"
-print(f"Welcome, {name}!")
-
-# Try list comprehensions
-squares = [x**2 for x in range(5)]
-print(f"Squares: {squares}")
-
-# Use modern Python modules
-import math, random, datetime
-
-print(f"Square root of 16: {math.sqrt(16)}")
-print(f"Random number: {random.randint(1, 100)}")
-print(f"Current time: {datetime.datetime.now()}")
-
-# Select an example from the dropdown to explore more advanced features
-`);
-                        }
-                        if(typeof showToast === 'function') showToast('Code reset to default', 'info');
-                    }
-                });
-            }
-            
-            // Handle example selection for both basic and advanced
-            setupExampleSelectors();
-
-            // Ensure editor refreshes if needed
-            setTimeout(() => { if(editor) editor.refresh(); }, 100);
-
-            // Initialize tabs if the function exists
-            if (typeof initializeTabs === 'function') initializeTabs();
-            if (typeof initializeAuthButtons === 'function') initializeAuthButtons();
-        });
-        
-        // Function to populate example dropdowns
-        function populateExampleDropdowns() {
-            console.log("Populating dropdowns...");
-            const basicSelect = document.getElementById('example-select');
-            const advancedSelect = document.getElementById('advanced-example-select');
-            
-            if (!basicSelect || !advancedSelect) {
-                console.error("Example select elements not found!");
-                return;
-            }
-            
-            console.log("Select elements found, clearing...");
-            // Clear existing options except the first one
-            basicSelect.innerHTML = '<option value="">Select an example</option>';
-            advancedSelect.innerHTML = '<option value="">Select an advanced example</option>';
-            
-            // Add basic examples with error handling
-            if (window.basicPythonExamples) {
-                console.log("Adding", window.basicPythonExamples.length, "basic examples");
-                window.basicPythonExamples.forEach((example, index) => {
-                    try {
-                        const option = document.createElement('option');
-                        option.value = example.id || `example-${index}`;
-                        option.textContent = example.title || `Example ${index + 1}`;
-                        basicSelect.appendChild(option);
-                    } catch (err) {
-                        console.error("Error adding basic example:", err);
-                    }
-                });
-            } else {
-                console.error("Basic examples not available!");
-            }
-            
-            // Add advanced examples with error handling
-            if (window.advancedPythonExamples) {
-                console.log("Adding", window.advancedPythonExamples.length, "advanced examples");
-                window.advancedPythonExamples.forEach((example, index) => {
-                    try {
-                        const option = document.createElement('option');
-                        option.value = example.id || `advanced-${index}`;
-                        option.textContent = example.title || `Advanced Example ${index + 1}`;
-                        advancedSelect.appendChild(option);
-                    } catch (err) {
-                        console.error("Error adding advanced example:", err);
-                    }
-                });
-            } else {
-                console.error("Advanced examples not available!");
-            }
-        }
-        
-        // Function to set up example selectors
-        function setupExampleSelectors() {
-            const basicSelect = document.getElementById('example-select');
-            const advancedSelect = document.getElementById('advanced-example-select');
-            
-            basicSelect.addEventListener('change', function() {
-                if (this.value) {
-                    const example = window.basicPythonExamples.find(ex => ex.id === this.value);
-                    if (example && editor) {
-                        editor.setValue(example.code);
-                        // Only show toast if explicitly selecting an example
-                        if (this.value !== "") {
-                            showToast(`Loaded example: ${example.title}`, 'info');
-                        }
-                    }
-                }
-            });
-            
-            advancedSelect.addEventListener('change', function() {
-                if (this.value) {
-                    const example = window.advancedPythonExamples.find(ex => ex.id === this.value);
-                    if (example && editor) {
-                        editor.setValue(example.code);
-                        // Only show toast if explicitly selecting an example
-                        if (this.value !== "") {
-                            showToast(`Loaded advanced example: ${example.title}`, 'info');
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Function to set up tab switching
-        function setupTabs() {
-            const tabs = document.querySelectorAll('.tabs .tab');
-            const basicSelect = document.getElementById('example-select');
-            const advancedSelect = document.getElementById('advanced-example-select');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    // Remove active class from all tabs
-                    tabs.forEach(t => t.classList.remove('active'));
-                    // Add active class to the clicked tab
-                    this.classList.add('active');
-                    
-                    currentMode = this.dataset.tab;
-                    
-                    if (currentMode === "basic") {
-                        basicSelect.style.display = 'block';
-                        advancedSelect.style.display = 'none';
-                        // Ensure Skulpt is ready but don't show a message
-                        if (typeof Sk === 'undefined' || typeof Sk.builtin === 'undefined') {
-                            console.log('Basic editor (Skulpt) not ready. Please wait or refresh.');
-                        }
-                        // Set default basic code silently
-                        editor.setValue(`# Welcome to Python Practice!
-# Start coding here - You may remove the following examples and start coding on your own
-
-print("Hello World")
-
-# Since Basic editor doesn't support f-strings, you can use string formatting.
-# For advanced features, use Advanced editor.
-name = "Python Coder"
-print("Welcome, {}!".format(name))
-
-# Variables and operations
-x = 10
-y = 20
-print("Sum:", x + y)
-
-# You can try conditionals
-if x < y:
-    print("y is greater than x")
-else:
-    print("x is greater than or equal to y")
-
-# Try loops
-for i in range(5):
-    print("Count:", i)
-`, true); // true = don't trigger change events
-                    } else { // Advanced mode
-                        basicSelect.style.display = 'none';
-                        advancedSelect.style.display = 'block';
-                        // Check if Pyodide is loading or ready
-                        if (window.pyodideLoading) {
-                            console.log('Advanced Python engine is loading...');
-                        } else if (window.pyodideReady) {
-                            console.log('Python engine ready');
-                        } else {
-                            // Attempt to load Pyodide if not already loading/loaded
-                            console.log('Initializing Advanced Python engine...');
-                            if (typeof loadPyodide === 'function') {
-                                loadPyodide().catch(err => {
-                                    console.error("Error loading Pyodide on tab switch:", err);
-                                });
-                            }
-                        }
-                        
-                        // Set default advanced code silently
-                        editor.setValue(`# Welcome to the Advanced Python Editor!
-# Here you can use modern Python 3 features like f-strings
-
-name = "Python Coder"
-print(f"Welcome, {name}!")
-
-# Try list comprehensions
-squares = [x**2 for x in range(5)]
-print(f"Squares: {squares}")
-
-# Use modern Python modules
-import math, random, datetime
-
-print(f"Square root of 16: {math.sqrt(16)}")
-print(f"Random number: {random.randint(1, 100)}")
-print(f"Current time: {datetime.datetime.now()}")
-
-# Select an example from the dropdown to explore more advanced features
-`, true); // true = don't trigger change events
-                    }
-                    // Refresh editor to ensure proper rendering after tab switch
-                    if (editor) editor.refresh();
-                });
-            });
-        }
-        
-        // Toast notification function
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            
-            toast.textContent = message;
-            toast.className = 'toast';
-            toast.classList.add(type);
-            
-            // Show the toast
-            // toast.classList.add('show'); // Commented out to disable toast
-            
-            // Hide after 3 seconds
-            // setTimeout(() => { // Commented out to disable toast
-            //     toast.classList.remove('show'); // Commented out to disable toast
-            // }, 3000); // Commented out to disable toast
-        }
-    </script>
+// Test hybrid engine
+function testHybridEngine() {
+    console.log('=== Hybrid Engine Test ===');
     
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(reg => console.log('Service Worker registered', reg))
-                .catch(err => console.log('Service Worker not registered', err));
-        }
-    </script>
+    if (typeof window.hybridPythonEngine === 'undefined') {
+        console.error('❌ Hybrid engine not available');
+        return;
+    }
+    
+    const testCode = 'print("Hello from Hybrid Engine!")';
+    
+    window.hybridPythonEngine.runPythonCode(testCode, 'output').then(() => {
+        console.log('✅ Hybrid engine test successful');
+    }).catch(error => {
+        console.error('❌ Hybrid engine test failed:', error);
+    });
+}
 
-    <!-- Add this right after the python-examples.js script tag -->
+// Test the specific input + f-string case
+function testInputFString() {
+    console.log('=== Testing Input + F-String Case ===');
+    
+    if (typeof window.hybridPythonEngine === 'undefined') {
+        console.error('❌ Hybrid engine not available');
+        return;
+    }
+    
+    const testCode = `name = input("Enter your name: ")
+age = int(input("Enter your age: "))
+place = input("Enter your place of birth: ")
+print(f"Welcome {name}, you are {age} years old and you were born in {place}")`;
+    
+    console.log('Testing problematic code:', testCode);
+    
+    window.hybridPythonEngine.runPythonCode(testCode, 'output').then(() => {
+        console.log('✅ Input + F-string test successful');
+    }).catch(error => {
+        console.error('❌ Input + F-string test failed:', error);
+    });
+}
+
+function handleRegister(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Basic client-side validation
+    if (data.password !== data.confirm_password) {
+        document.getElementById('register-message').textContent = 'Passwords do not match';
+        document.getElementById('register-message').style.display = 'block';
+        return false;
+    }
+    
+    // Send the form data to the server
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        const messageEl = document.getElementById('register-message');
+        messageEl.textContent = data.message;
+        messageEl.style.display = 'block';
+        messageEl.className = 'form-message ' + (data.success ? 'success' : 'error');
+        
+        if (data.success) {
+            // Clear the form on success
+            form.reset();
+            // Optionally close the modal or redirect
+            setTimeout(() => {
+                document.getElementById('register-modal').style.display = 'none';
+                // Show login modal
+                document.getElementById('login-modal').style.display = 'block';
+            }, 1500);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const messageEl = document.getElementById('register-message');
+        messageEl.textContent = 'An error occurred. Please try again.';
+        messageEl.className = 'form-message error';
+        messageEl.style.display = 'block';
+    });
+    
+    return false;
+}
+
+    </script>
+    <!-- Simplified jQuery handlers for auth buttons without conflicting event handlers -->
     <script>
-        // Ensure examples are available by providing fallbacks
-        document.addEventListener('DOMContentLoaded', function() {
-            // If examples aren't loaded by the time page loads, provide fallback examples
-            setTimeout(function() {
-                if (!window.basicPythonExamples) {
-                    console.log("Creating fallback basic examples");
-                    window.basicPythonExamples = [
-                        {
-                            id: "hello",
-                            title: "Hello World",
-                            code: '# Simple Hello World example\nprint("Hello, World!")'
-                        },
-                        {
-                            id: "variables",
-                            title: "Variables & Data Types",
-                            code: '# Variables example\nname = "Python Learner"\nage = 25\nprint("Name:", name)\nprint("Age:", age)'
-                        }
-                    ];
+        $(document).ready(function() {
+            console.log('Setting up visual effects for auth buttons');
+            
+            // Only add visual effect styling without click handlers
+            $('#login-btn, #register-btn').css('position', 'relative');
+            
+            // Use a delegated approach to handle button visual effects without interfering with click events
+            $(document).on('click', '#login-btn', function() {
+                $(this).css('background-color', '#ffcc00').delay(300).queue(function() {
+                    $(this).css('background-color', '').dequeue();
+                });
+            });
+            
+            $(document).on('click', '#register-btn', function() {
+                $(this).css('background-color', '#ffcc00').delay(300).queue(function() {
+                    $(this).css('background-color', '').dequeue();
+                });
+            });
+            
+            // Close buttons for modals - keep these as they don't conflict
+            $('.modal .close').click(function() {
+                const $modal = $(this).closest('.modal');
+                $modal.removeClass('show');
+                setTimeout(() => {
+                    $modal.hide();
+                }, 300); // Match the transition time in CSS
+            });
+            
+            // Click outside modal to close - keep these as they don't conflict
+            $('.modal').click(function(e) {
+                if (e.target === this) {
+                    const $modal = $(this);
+                    $modal.removeClass('show');
+                    setTimeout(() => {
+                        $modal.hide();
+                    }, 300); // Match the transition time in CSS
                 }
-                
-                if (!window.advancedPythonExamples) {
-                    console.log("Creating fallback advanced examples");
-                    window.advancedPythonExamples = [
-                        {
-                            id: "fstrings",
-                            title: "F-strings (Python 3.6+)",
-                            code: '# F-strings example\nname = "Alice"\nage = 30\nprint(f"My name is {name} and I am {age} years old.")'
-                        },
-                        {
-                            id: "list_comp",
-                            title: "List Comprehensions",
-                            code: '# List comprehension\nnumbers = [1, 2, 3, 4, 5]\nsquares = [x**2 for x in numbers]\nprint(f"Squares: {squares}")'
-                        }
-                    ];
-                }
-                
-                // Re-populate the dropdowns after ensuring examples exist
-                populateExampleDropdowns();
-            }, 500); // Wait half a second to ensure all scripts have had a chance to load
+            });
         });
     </script>
 </body>

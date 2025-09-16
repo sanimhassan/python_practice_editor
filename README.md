@@ -2,10 +2,6 @@
 
 A web-based Python learning platform that allows students to practice Python programming directly in the browser.
 
-## Description
-
-This project combines elements from both local and remote repositories, providing a web-based Python learning platform.
-
 ## Features
 
 ### Basic Mode (Skulpt)
@@ -43,14 +39,24 @@ The application features a modern, user-friendly interface with:
 - For full Python 3 support, the Advanced mode will use Pyodide (WebAssembly-based Python)
 
 ### Files Structure
-- `index.html` - Original HTML file
-- `enhanced-index.html` - Enhanced version with improved UI/UX
-- `css/styles.css` - Original CSS styles
-- `css/enhanced-styles.css` - Enhanced CSS with modern design
-- `js/main.js` - Main JavaScript functionality
-- `js/skulpt-setup.js` - Skulpt Python interpreter setup
-- `js/skulpt-completion.js` - Code completion functionality
-- `js/enhanced-ui.js` - Enhanced UI interactions and features
+- `index.html` - The main HTML file for the web application.
+- `css/enhanced-styles.css` - CSS styles for the modern, user-friendly interface.
+- `js/readme.js` - Manages the content and display of the README tab.
+- `js/theme.js` - Handles light and dark theme toggling.
+- `js/ui-helpers.js` - Provides utility functions for UI interactions like toast notifications and clearing output panels.
+- `js/advanced-engine.js` - Manages the Pyodide (Advanced Mode) Python engine, including loading, executing Python code, and handling output/errors.
+- `js/app-controller.js` - The main application controller, responsible for initializing modules, updating UI based on authentication and mode, and setting up event listeners.
+- `js/auth.js` - Handles user authentication (login, registration, logout), manages user sessions, and provides functions for saving and loading user code.
+- `js/basic-engine.js` - Manages the Skulpt (Basic Mode) Python interpreter, including code execution, output handling, and guest execution limits.
+- `js/editor.js` - Manages the CodeMirror editor instances, handles tab switching between Basic, Advanced, and Readme modes, and integrates run/reset functionalities.
+- `js/pyodide-setup.js` - (Not directly used in the current `advanced-engine.js` but likely a remnant or alternative setup for Pyodide)
+- `js/enhanced-ui.js` - (Likely deprecated or integrated into `app-controller.js` and `ui-helpers.js` based on code review)
+- `js/hostinger-ui.js` - (Likely deprecated or specific to a hosting environment, not directly integrated into core logic)
+- `php/fixed_db_config.php` - PHP file for database configuration.
+- `php/fixed_login.php` - PHP file for handling user login and session management.
+- `php/fixed_register.php` - PHP file for handling new user registration.
+- `php/save_progress.php` - PHP file for saving user code progress.
+- `php/get_codes.php` - PHP file for retrieving user's saved codes.
 
 ## How to Use
 

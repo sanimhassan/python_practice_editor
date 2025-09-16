@@ -22,6 +22,13 @@ RewriteEngine On
 RewriteCond %{REQUEST_METHOD} OPTIONS
 RewriteRule ^(.*)$ $1 [R=200,L]
 
+# Protect sensitive files
+<FilesMatch "\.(env|ini|log|sh|sql|env.example|gitignore|htaccess|htpasswd|DS_Store)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+
 # Prevent directory listing
 Options -Indexes
 
