@@ -79,3 +79,10 @@ The application features a modern, user-friendly interface with:
 - Add code sharing and export functionality
 - Implement a more sophisticated code editor with full syntax highlighting
 - Add unit tests for exercises to verify solutions
+
+## Setup Instructions
+
+1. Clone this repository
+2. Copy `.env.example` to `.env`
+3. Update the `.env` file with your actual database credentials
+4. Run the application
