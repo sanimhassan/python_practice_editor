@@ -15,3 +15,5 @@ python-pwa-practice.zip
 # Ignore database files
 db/*.db
 my_custom_error_log.txt
+.env
+*.env
